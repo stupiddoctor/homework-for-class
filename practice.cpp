@@ -1,20 +1,7 @@
 #include<iostream>
 #include<cmath>
 using namespace std;
-/*int main()
-{int x,y,sum;
-x=5;
-y=9;
-int*p=&x;
-cout<<&x<<'\n';
-cout<<&*p<<'\n';
-cout<<p<<'\n';
-cout<<*p<<'\n';
-x=29;
-cout<<&x;
-return 0;
-}*/
-//about the address
+
 class base
 {
 	public:
