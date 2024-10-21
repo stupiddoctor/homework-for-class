@@ -1,0 +1,145 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{乐天, 310101674}
+\chead{数据结构与算法第四次作业}
+\rhead{Oct.20th, 2024}
+
+\section{测试程序的设计思路}
+测试程序可分为六个部分
+
+在第一部分，主要测试构造函数与赋值运算，第二部分测试重构运算符==、!=、++、---、*的运算,第三部分测试插入功能，第四部分测试修改功能（front、back函数能否正确完成链表的修改），第五部分测试删除功能，第六部分测试清空功能。每个部分涉及到链表打印的部分调用了自行添加的List公有成员函数printall
+
+第一部分，创建了一个名为 intlist1 的整型空链表，一个提供了初始化列表 {1,2,3,4,5}的intlist2整型链表，利用拷贝构造函数创建了和intlist2相同的intlist3，输出intlist3,稍微更改intlist3,再进行连等号的赋值运算,将intlist3值赋给intlist2和intlist1，输出intlist1检验,输出结果应为
+\\
+
+intlist3:
+
+1 2 3 4 5 
+
+intlist1:
+
+1 2 3 4 5 1
+\\
+
+第二部分，输出结果应为
+\\
+
+迭代器相等: 1
+
+迭代器不等: 1
+
+intlist1的第一和第三个数据分别是:1和3
+
+intlist1的倒数第一和第三个数据分别是:1和4
+\\
+
+第三部分，检验insert、pushfront、pushback三个函数，最后打印 intlist1 的新状态以及检验对应size大小，输出结果应为
+\\
+
+插入功能测试
+
+intlist1:
+
+-8 1 20 22 2 3 4 5 1 12 
+
+size:10
+\\
+
+第四部分，利用front与back，观察是否可以顺利更改头尾值，输出应为：
+\\
+
+修改头尾测试
+
+100 1 20 22 2 3 4 5 1 200 
+\\
+
+第五部分，测试删除功能，分别检验erase的单个删除、pop\_front、pop\_back的功能，这是因为后两个函数使用了erase函数，这样测试更清楚是哪一部分出了问题
+再检验erase指定范围删除功能,同时检验size是否正确
+输出应为：
+\\
+
+删除功能测试
+
+删除第二个元素100 20 22 2 3 4 5 1 200
+
+intlist只保留头尾:100 200 
+
+size:2
+\\
+
+第六部分,利用clear清空，利用empty检验是否清空，输出结果应为：
+\\
+
+清空功能测试
+
+清空intlist1:
+
+已清空
+
+
+
+\section{测试的结果}
+
+测试结果一切正常。
+测试结果与描述一致。
+最后，我用 valgrind 进行测试，发现没有发生内存泄露。
+
+\section{（可选）bug报告}
+
+我发现了bug，触发条件如下：
+
+\begin{enumerate}
+    \item auto it=intlist1.end();
+    ++it 
+    程序报错
+    \item 在erase(iterator from, iterator to)函数里，让前面的迭代器from指向的节点在to的后面 ，程序报错
+\end{enumerate}
+
+据我分析，1出现的原因是：设计++、(--)操作没有考虑边界条件，当指针已经指向链表的哨兵元素时，再次使用会超出链表的界限导致报错
+2出现的原因，不论是修改前还是修改后的erase，每次循环时都是从from往后找，如果to指向的在from的前面，循环无法正确中止
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+

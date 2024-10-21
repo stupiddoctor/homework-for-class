@@ -1,0 +1,2 @@
+1.在List类增加了公有成员函数printall,作用是将List的所有数据打印出来
+2.优化了erase（iterator from, iterator to）设计，原来的相当于多次调用erase（iterator itr），每次循环都需要对相应的next和prev进行调整，现在的erase直接对删除的起止位置的相应next和prev进行调换
