@@ -1,0 +1,90 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{乐天, 310101674}
+\chead{数据结构与算法第五次作业}
+\rhead{Nov.5th, 2024}
+
+\section{对修改后remove函数实现的阐述}
+remove函数其余部分并未修改，主要修改的是“被删除的节点有两个子节点”的部分。
+
+在该部分中，首先借助detachMin函数找到删除节点（以下简称A节点）的右子树的最小节点（以下简称B节点），并将B节点从原来的树中分离出来。
+
+
+然后，利用节点替换的方式，实现删除。具体来说，将B节点的左右指针指向A节点的左右指针指向的节点，将A的parents指向A的指针改为指向B，最后，用delete删除A节点。
+\\
+
+
+
+
+
+\section{测试输出结果的呈现和分析}
+保留了原来对该树的其他功能的测试（包括异常处理）
+
+对remove的函数功能进行了测试，分别测试了 对空树进行删除、删除有两个子节点的节点（删除5）、删除叶子节点(删除3)、删除仅含有一个子节点的节点（删除7,注：在执行前面的删除操作后7只有一个节点）、删除不存在于该树中的节点（删除20）、测试的输出结果应为
+
+empty Tree after removing :
+
+Empty tree
+
+Tree after removing 5:\\3\\6\\7\\9\\10\\15\\18
+
+Tree after removing 3:\\6\\7\\9\\10\\15\\18
+
+Tree after removing 7:\\6\\9\\10\\15\\18
+
+Tree after removing 20:\\6\\9\\10\\15\\18
+
+对于删除节点5的情况进行跟踪分析：
+
+根节点为10，比x(5)大，递归调用remove（t->left），
+因为 x 等于 t->left->element（都是5），进入 else if 分支。
+
+节点5有两个子节点（3和7），因此调用 detachMin(t->right) 找到右子树中的最小节点，即7的左子树6
+。
+节点6从原树中分离，6没有右节点，因此7的左指针改为指向空值，指针“\_replace”指向6，然后将6的左指针指向3，右指针指向7，将10的左指针指向6，delete删掉5，实现删除。
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+
