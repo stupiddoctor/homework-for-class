@@ -1,5 +1,7 @@
 #include <iostream>
 
+
+
 /// 临时性的异常类，用于表示树为空的异常
 class UnderflowException { };
 class IllegalArgumentException { };
@@ -179,7 +181,7 @@ public:
         return *this;
     }
 
-private:
+protected:
     /**
      * @brief 二叉树节点结构体
      */
@@ -188,7 +190,7 @@ private:
         Comparable element;  ///< 节点存储的元素
         BinaryNode *left;    ///< 左子节点指针
         BinaryNode *right;   ///< 右子节点指针
-
+        int height;
         /**
          * @brief 构造函数，接受常量引用
          * 
@@ -196,8 +198,8 @@ private:
          * @param lt 左子节点指针
          * @param rt 右子节点指针
          */
-        BinaryNode(const Comparable &theElement, BinaryNode *lt, BinaryNode *rt)
-            : element{ theElement }, left{ lt }, right{ rt } {}
+        BinaryNode(const Comparable &theElement, BinaryNode *lt, BinaryNode *rt ,int h=1)
+            : element{ theElement }, left{ lt }, right{ rt } ,height{ h } {}
 
         /**
          * @brief 构造函数，接受右值引用
@@ -206,12 +208,12 @@ private:
          * @param lt 左子节点指针
          * @param rt 右子节点指针
          */
-        BinaryNode(Comparable &&theElement, BinaryNode *lt, BinaryNode *rt)
-            : element{ std::move(theElement) }, left{ lt }, right{ rt } {}
+        BinaryNode(Comparable &&theElement, BinaryNode *lt, BinaryNode *rt ,int h=1)
+            : element{ std::move(theElement) }, left{ lt }, right{ rt } ,height{ h }{}
     };
 
     BinaryNode *root;  ///< 树的根节点指针
-
+    
     /**
      * @brief 递归查找最小元素
      * 
@@ -326,6 +328,7 @@ private:
             /// 如果元素已存在，则不进行插入
             /// 这种情况不可遗漏，严格的规则中也可以抛出异常
         }
+        balance(t);
     }
 
     /**
@@ -345,6 +348,7 @@ private:
         } else {
             // 如果元素已存在，则不进行插入
         }
+        balance(t);
     }
 
     /**
@@ -366,13 +370,16 @@ private:
         } 
         /// 进入以下这两个分支，都是说明找到了要删除的元素(x==t->element)
         else if (t->left != nullptr && t->right != nullptr) {  /// 有两个子节点
+            
             BinaryNode *_replace = detachMin(t->right);
+            BinaryNode *to = _replace->right;
             
             BinaryNode *oldNode = t;
             _replace->left = t->left;
             _replace->right = t->right;
             t = _replace;
             delete oldNode;
+            balfromto(t->right,to);
             
         } else {
             /// 有一个或没有子节点的情形是简单的
@@ -380,10 +387,29 @@ private:
             t = (t->left != nullptr) ? t->left : t->right;
             delete oldNode;
         }
+
+        balance(t);
     }
+    //指向最小元的位置
+    //删除最小元之后，从这个位置往上开始更新高度
+    /**
+     * @brief 递归克隆树的结构
+     * 
+     * @param t 当前节点指针
+     * @return 新的节点指针
+     */
+    BinaryNode *clone(BinaryNode *t) const {
+        if (t == nullptr) {
+            return nullptr;
+        }
+        return new BinaryNode{t->element, clone(t->left), clone(t->right),t->height};
+    }
+private:
 
     
-    BinaryNode *detachMin(BinaryNode *&t){
+    //隔离最小元
+    BinaryNode *detachMin(BinaryNode *&t)
+    {
         if(t == nullptr){
             return nullptr;
         }
@@ -396,21 +422,87 @@ private:
         
         }
     }
-        
+    //对这两个位置路径之间的节点做平衡
+    void balfromto(BinaryNode *&from,BinaryNode *&to)
+    {
+        if(from == to){
+
+        }else{
+            balfromto(from->left,to);
+        }
+        balance(from);
+
+    }
+
+    static const int ALLOWED = 1;
+
+    int  Height(const BinaryNode * t ) const
+    {
+        return t == nullptr ? 0 : t->height;
+    }
+
+    int max(int a, int b)const
+    {
+        return a>b?a:b;
+    }
+
+
+    void balance(BinaryNode * & t)
+    {
+        if(t == nullptr)
+         return;
+        if(Height(t->left)-Height(t->right) > ALLOWED)
+        {
+            if( Height( t->left->left ) >= Height( t->left->right ) )
+                rotateWithLeftChild( t );
+            else
+                doubleWithLeftChild( t );
+        }
+        if(Height(t->right)-Height(t->left) > ALLOWED)
+        {
+            if( Height( t->right->right ) >= Height( t->right->left ) )
+                rotateWithRightChild( t );
+            else
+                doubleWithRightChild( t );
+        }
+        t->height =  max( Height( t->left ), Height( t->right ) ) + 1;       
+    }  
+
+    void  rotateWithLeftChild(BinaryNode * & k2)
+    {
+        BinaryNode *k1 = k2->left;
+        k2->left = k1->right;
+        k1->right = k2;
+        k2->height = max(Height(k2->left),Height(k2->right)) + 1;
+        k1->height = max(Height( k1->left ), k2->height ) + 1;
+        k2 = k1;
+    }
+
+    void  rotateWithRightChild(BinaryNode * & k2)
+    {
+        BinaryNode *k1 = k2->right;
+        k2->right=k1->left;
+        k1->left=k2;
+        k2->height = max(Height(k2->left),Height(k2->right)) + 1;
+        k1->height = max(Height( k1->left ), k2->height ) + 1;
+        k2 = k1;
+    }
+
+    void  doubleWithLeftChild(BinaryNode * & t)
+    {
+        rotateWithRightChild(t->left);
+        rotateWithLeftChild( t );
+    }
+
+    void  doubleWithRightChild(BinaryNode * & t)
+    {
+        rotateWithLeftChild(t->right);
+        rotateWithRightChild( t );
+    }
+
         
         
     
    
-    /**
-     * @brief 递归克隆树的结构
-     * 
-     * @param t 当前节点指针
-     * @return 新的节点指针
-     */
-    BinaryNode *clone(BinaryNode *t) const {
-        if (t == nullptr) {
-            return nullptr;
-        }
-        return new BinaryNode{t->element, clone(t->left), clone(t->right)};
-    }
+    
 };

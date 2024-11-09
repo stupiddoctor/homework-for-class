@@ -1,6 +1,6 @@
 all:
-	g++ main.cpp -o main -std=c++14 -O2 -I./
+	g++ test.cpp -o test -std=c++14 -O2 -I./
 run:all
-	./main
+	./test
 report:
 	xelatex report.tex
