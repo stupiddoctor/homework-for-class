@@ -1,0 +1,102 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{乐天, 310101674}
+\chead{数据结构与算法第七次作业}
+\rhead{Nov.31st, 2024}
+
+\section{堆排序的实现}
+建了一个名为BinaryHeap的类，该类具有二叉堆的结构，并满足父节点的值小于子节点的值。BinaryHeap支持基本的堆操作，比如插入（insert）与删除最小元（DeleteMin）。该类中私有成员有currentSize(记录当前堆中元素个数，空堆currentSize=0)和一个用于存储堆中元素的vector:array。
+
+insert函数：功能：向堆中插入新元素，并保持堆的性质。
+
+实现细节：将新元素添加到堆的末尾（array[currentSize]），然后通过私有函数percolateUp 函数向上调整，确保父节点小于子节点，最后将currentSize加1。percolateUp函数是通过比较当前节点与其父节点的大小，如果当前节点较小，则通过std::swap与父节点交换，并且如果发生了交换，继续递归进行percolateUp，直到满足堆的性质。
+
+
+DeleteMin函数：类中有两种DeleteMin函数，一种不带参数，功能是移除最小元，一种带参数，功能是将当前堆中最小元的值传给参数，并将最小元移除
+
+实现细节：（只说明不带参数的DeleteMin函数，带参数的DeleteMin函数只要提前将堆中根节点的值通过引用赋给参数，再运行不带参数的DeleteMin函数即可。）将最右侧的叶子节点赋值给根节点，将currentSize减1，再通过percolateDown函数向下调整。（所以实际上最右侧的叶子节点的值还保留在array中，但由于currentSize已经减1，并不会对降堆操作产生影响，如果之后有新元素insert，还可以覆盖这个值）
+percolateDown是通过比较当前节点与其子节点的大小，如果当前节点较大，则将子节点中较小的一个通过std::swap与该节点交换值，继续递归进行percolateDown，直到出现下面情况：1.没有子节点 2.子节点均大于该节点的值。
+\\
+
+
+insert函数与DeleteMin函数均为$\theta(logn)$
+\\
+
+
+接下来通过void myheapsort函数完成堆排序，该函数有一个vector类型的参数，功能是将该vector的元素按从小到大排列。
+
+具体实现：建立空堆，将vector中的所有元素通过insert插入到堆中。然后通过 带参数的DeleteMin 函数依次将堆中的最小元素放回vector中，从而实现排序。
+
+\section{测试程序}
+首先生成了长为1000000的随机序列；长为1000000的有序序列；长为1000000的逆序序列；长为1000000的部分元素重复序列各两个，分别使用std::make\_heap、std::sort\_heap排序和myheapsort排序，通过chrono计时，结果如下
+
+
+\begin{table}[!htp]
+    \centering
+    \caption{时间比较（单位：毫秒）} 
+    \begin{tabular}{c|c|c}
+        \hline
+         \ & my heapsort time & std::sort\_heap time \\
+        \hline
+        random sequence & 127 & 120\\
+        \hline
+        ordered sequence & 65 & 56 \\
+        \hline
+        reverse sequence & 83 & 61 \\
+        \hline
+        repetitive sequence & 122 & 117 \\
+        \hline
+    \end{tabular}
+ \end{table}
+
+
+
+
+\section{时间复杂度分析}
+由主定理，insert函数与DeleteMin函数的递归满足$O(n)=O(n/2)+\theta(1)$，故均为$\theta(logn)$
+
+在myheapsort函数中进行了n（元素个数）次insert与n次DeleteMin，所以复杂度为$\theta(nlogn)$,推测效率不如std::sort\_heap排序是因为在这个过程中进行了大量的值的复制
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
