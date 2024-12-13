@@ -1,0 +1,128 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{乐天, 310101674}
+\chead{数据结构与算法项目作业：四则计算器}
+\rhead{Dec.14th, 2024}
+
+在该项目作业中，实现了一个能够计算多重括号和四则运算的计算器，支持有限位小数和负数运算，但不支持科学计数法。
+实现四则运算器的思路并不复杂，与书上基本一致，代码可以分为以下三个部分：1.将输入的中缀表达式改为后缀表达式 2.计算后缀表达式。3.输出。
+我的报告也将会基本按照这三个部分分开介绍。
+\section{后缀表达式的计算与识别不合法表达式}
+在第一部分，我们总假定已经有了vector<string>形式的后缀表达式，在这个vector中,一个string对应一个完整的数字或运算符，例如：\{“23.5”，“12”，“*”\}，在第2部分再介绍如何将中缀表达式转化为这种形式后缀表达式。
+如何计算：遍历这个vector,准备一个数据结构（这在这个程序里面用的是自建的一个类，但这个类只是栈的拙劣模仿，当成一个简单的栈即可，因此不特别介绍）number储存读到的数字，如果读到运算符，就从number中弹出最后进入的两个数字，结合这个运算符做运算，再把运算结果放回number，待到最后一个运算符完成运算时，number剩下的那个数字就是计算结果。
+
+关于不合法表达式的识别：我同样将不合法表达式的识别放在了这个部分。事实上，不合法表达式可以被简单归为三种：
+
+1.除数为0 
+
+2.出现了不合法的符号.如\&,
+
+3.符号合法，但数字个数与运算符个数不匹配
+
+第一种情况和第二种情况都可以在“从number中弹出最后进入的两个数字，结合这个运算符做运算”这个部分识别，识别到不可运算的符号、做除法识别到除数为0，就输出ILLEGAL。第三种情况看似复杂，但其实只有一种情况（先不考虑负数），那就是“运算符需要的数字个数比现有数字多”，注意，理论上似乎同样存在“运算符需要的数字个数比现有数字少”的情况，但实际上不可能，这是因为在输入中缀表达式的时候，如果少输入了字符，例如将“4*2*3”输为“42*3”或“4 2*3”，前一种4和2会被理解为整体，即42，虽然未必符合使用者意图，但从表达式看是合法的，后一种空格也会被读进来，会被视为第二种情况。所以，只要考虑“运算符需要的数字个数比现有数字多”的情况，针对这种情况，我们只要在每次读到运算符的时候，看看number剩余的数字个数是否不小于2就好。
+
+
+\section{中缀表达式到后缀表达式的转换}
+这一部分实现了从一个string形式的中缀表达式转换为一个vector<string>的后缀表达式。（先不考虑负数）
+
+由vector<string> changeresult贮存结果。
+
+遍历这个中缀表达式的string，如果读到的是一个数字或者小数点，就把它写入另一个string里（程序里用的名字是numberpart），如果不是（相当于读到了一个符号），在numberpart非空的情况，将这个string整体写入changeresult（这一步相当于得到了一个完整的数字）并清空numberpart，然后通过sign函数给这个符号一个优先级标识，具体规则为：“+”和“-”为1，“*”和“/”为2，“（”为一个很大的数字（该程序中为100），“）”为0，其他符号为3（这里为其他符号统一赋了3，是为了保证这些符号被正常读入，从而在后面的计算中被识别），如果读到的这个符号满足以下三种情况中的至少一种，就将其存入栈operators：1.栈是空的、2.目前栈的最后一个符号是左括号3.优先级比栈最后一个符号大。否则，分两种情况：1.如果它是右括号且上一个是左括号，就将这两个直接删除，2.如果它不满足1，就将operators最后一个符号作为一个string弹出到changeresult,重复上述判定，直到这个符号被删除或者被放入栈operators。
+遍历结束后，再做一次将numberpart写入changeresult（最后一个数字）、operators的尽数弹出（这个时候，如果表达式正确，剩下的operators均是前一个优先级比后一个小），就是我们要的后缀表达式。
+
+关于负数：负数的判定，在前一个符号不是“）”的情况下连续读到两个符号，且后一个符号是“-”。
+负数的处理，将负数例如-5，按照（0-5）处理（这里的括号是必要的）。
+
+补充：
+
+1.为什么括号不匹配的情况最终能被识别，不论是多了个左括号还是右括号，都会导致左、右括号删不掉，在最后operators的尽数弹出时，就会被写入后缀表达式changeresult，括号同样属于不可运算的符号，就会在计算中被识别，输出ILLEGAL。
+
+2.对于小数点前无数字的输入，同样看成不合法，即.9这种输入，这种错误能识别是因为，计算机不能识别.9为数字，导致计算的时候，“.9”被识别为符号，从而无法进行，相当于和第2种错误用了同样的判别方法。
+
+\section{main函数、测试样例与时间复杂度}
+在这个程序早期设计中，报错是由std::cout<<"ILLEGAL"<<std::endl;和exit(EXIT\_FAILURE);这两句话实现，后果是，一旦输入错误的错误的表达式，就直接中止程序了，这个程序的初衷是设计一个计算器，如果十个运算式因为第一个不合法导致后面的都做不了，还要重启程序，作为计算器实在是令人难以接受，为此，从计算器的功能考虑，将计算部分的输出改为了string形式，这样不仅达成了“如果输入的中缀表达式合法，输出计算结果；如果非法，输出ILLEGAL”的要求，而且该计算器可以多次使用。（当然，一件比较尴尬的事情是，为了输出好看一点，在输出结果的函数里，做了一次判定，如果结果不是ILLEGAL，就把string转为double）
+ 
+在最终的main函数里，每次输出用户输入的计算式的计算结果后（不论是不是ILLEGAL）都会提示“按1继续使用，按0退出使用”，用户可以根据自己的需求选择。
+
+以下是一些测试样例和输出结果，保留了部分测试样例在main函数的注释里。
+
+运算次序
+
+5.1+3*23  Result:74.1
+
+45-50/10  Result:40
+
+括号使用 
+
+(5.1-5)*23 Result:2.3
+
+(3.2+1.4*2)*2 Result:12
+
+((5+3)*20/5)   Result:32
+
+3.2*(5.4+4.6) Result:32
+
+负数
+
+8*-2+-7*2 Result:-30
+
+(5+-3)/3 Result:0.666667
+
+四个错误测试
+
+5.1+3*23)  （括号不匹配）输出：ILLEGAL
+
+
+(5+3)\#*23   （符号不合法）输出：ILLEGAL
+
+((5+3)*23/0) （除数为0）输出：ILLEGAL
+
+(.5-3)*23  （不合法的数字输入）输出：ILLEGAL
+
+该程序（输入一个中缀表达式，得到计算结果）的时间复杂度为$\theta(n)$
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+
